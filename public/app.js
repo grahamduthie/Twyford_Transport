@@ -24,6 +24,7 @@ const state = {
   operatorFilters: new Set(),  // operators currently enabled (all by default)
   allOperators: new Set(),
   mobileFiltersOpen: false,
+  stopsVisible: true,
   lastFetchSource: null,
 };
 
@@ -79,12 +80,14 @@ function initMap() {
 function createBusIcon(bus) {
   const borderColor = bus.status === 'late' ? '#f59e0b' : (bus.status === 'early' ? '#06b6d4' : '#10b981');
   const pulseClass  = bus.status === 'late' ? 'pulse-late' : 'pulse-on-time';
+  const icon = bus.bearing != null ? 'navigation' : 'directions_bus';
+  const rotation = bus.bearing != null ? `transform: rotate(${bus.bearing}deg);` : '';
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
       <div class="bus-marker-container">
         <div class="bus-marker-icon ${pulseClass}" style="border-color: ${borderColor}">
-          <span class="material-symbols-outlined" style="font-size:20px; color: ${bus.color}">directions_bus</span>
+          <span class="material-symbols-outlined" style="font-size:20px; color: ${bus.color}; ${rotation}">${icon}</span>
         </div>
         <div class="bus-marker-label" style="background: ${bus.color}">${bus.lineRef}</div>
       </div>`,
@@ -100,10 +103,9 @@ function createStopIcon(stop, isActive) {
     html: `
       <div class="stop-marker-container">
         <div class="stop-marker-dot ${activeClass}"></div>
-        <div class="stop-marker-name">${stop.name.replace('Twyford ', '')}</div>
       </div>`,
-    iconSize: [80, 36],
-    iconAnchor: [40, 8],
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
   });
 }
 
@@ -193,7 +195,7 @@ function updateBusMarkers() {
     if (state.lastFetchSource === 'error') {
       $emptyMsg.textContent = 'Unable to connect to the live data feed. Please check your connection.';
     } else {
-      $emptyMsg.textContent = 'No buses are currently being tracked in the Twyford area. Services may not be running at this time.';
+      $emptyMsg.textContent = 'No buses are currently being tracked on monitored routes. Services may not be running at this time.';
     }
   } else {
     $emptyState.classList.add('hidden');
@@ -205,11 +207,18 @@ function updateStopMarkers() {
   Object.values(state.stopMarkers).forEach(m => state.map.removeLayer(m));
   state.stopMarkers = {};
 
+  if (!state.stopsVisible) return;
+
   state.stops.forEach(stop => {
     const isActive = stop.id === state.activeStopId;
     const marker = L.marker([stop.lat, stop.lon], {
       icon: createStopIcon(stop, isActive),
       zIndexOffset: 500,
+    });
+    marker.bindTooltip(stop.name, {
+      direction: 'top',
+      offset: [0, -10],
+      className: 'stop-tooltip',
     });
     marker.on('click', () => openStopPanel(stop));
     marker.addTo(state.map);
@@ -564,6 +573,15 @@ function handleOperatorFilterChange(e) {
   updateBusMarkers();
 }
 
+function handleStopToggleChange(e) {
+  state.stopsVisible = e.target.checked;
+  // Sync toggles across desktop/mobile
+  document.querySelectorAll('.stop-toggle-checkbox').forEach(cb => {
+    cb.checked = state.stopsVisible;
+  });
+  updateStopMarkers();
+}
+
 // =============================================
 //  MOBILE FILTER DRAWER
 // =============================================
@@ -794,6 +812,11 @@ function bindEvents() {
     closeStopPanel();
     closeJourneyPanel();
     closeMobileFilters();
+  });
+
+  // Stop visibility toggles
+  document.querySelectorAll('.stop-toggle-checkbox').forEach(cb => {
+    cb.addEventListener('change', handleStopToggleChange);
   });
 
   // Search

@@ -243,6 +243,24 @@
             text-overflow: ellipsis;
         }
 
+        /* Stop tooltip on hover */
+        .stop-tooltip {
+            font-family: 'Hanken Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #191c1e;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            padding: 4px 10px;
+            box-shadow: 0 2px 8px rgba(0, 74, 198, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .stop-tooltip::before {
+            border-top-color: rgba(255, 255, 255, 0.92) !important;
+        }
+
         /* Active nav state */
         .nav-btn-active {
             background: #2563eb;
@@ -305,8 +323,20 @@
             </button>
         </div>
 
+        <!-- Stop marker toggle -->
+        <div class="mt-auto glass-panel p-md rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-sm">
+                <span class="material-symbols-outlined text-primary text-[20px]">location_on</span>
+                <span class="text-label-sm text-on-surface font-bold uppercase tracking-wider">Bus Stops</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="stop-toggle-checkbox sr-only peer" checked>
+                <div class="w-9 h-5 bg-outline-variant/40 peer-focus:outline-none rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+            </label>
+        </div>
+
         <!-- Operator filter checkboxes -->
-        <div class="mt-auto glass-panel p-md rounded-2xl flex flex-col gap-sm">
+        <div class="glass-panel p-md rounded-2xl flex flex-col gap-sm">
             <span class="text-label-sm text-outline block mb-xs uppercase tracking-wider font-bold">Operators</span>
             <div id="operator-filters" class="flex flex-col gap-sm">
                 <!-- Populated dynamically -->
@@ -323,7 +353,7 @@
             <div class="glass-panel rounded-2xl p-lg text-center max-w-sm pointer-events-auto">
                 <span class="material-symbols-outlined text-5xl text-outline mb-md">directions_bus_filled</span>
                 <h3 class="font-headline-md text-on-surface font-bold text-lg mb-sm">No Active Buses</h3>
-                <p id="empty-state-message" class="text-on-surface-variant text-sm">No buses are currently being tracked in the Twyford area. Services may not be running at this time.</p>
+                <p id="empty-state-message" class="text-on-surface-variant text-sm">No buses are currently being tracked on these routes. Services may not be running at this time.</p>
                 <p class="text-outline text-xs mt-md">Data refreshes every 30 seconds</p>
             </div>
         </div>
@@ -461,6 +491,19 @@
             </header>
 
             <div class="space-y-md pt-md">
+                <div class="space-y-sm">
+                    <h3 class="text-xs font-bold text-outline uppercase tracking-widest">Display</h3>
+                    <div class="flex items-center justify-between py-sm">
+                        <div class="flex items-center gap-sm">
+                            <span class="material-symbols-outlined text-primary text-[20px]">location_on</span>
+                            <span class="text-sm text-on-surface font-semibold">Show Bus Stops</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="stop-toggle-checkbox sr-only peer" checked>
+                            <div class="w-9 h-5 bg-outline-variant/40 peer-focus:outline-none rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                        </label>
+                    </div>
+                </div>
                 <div class="space-y-sm">
                     <h3 class="text-xs font-bold text-outline uppercase tracking-widest">Operators</h3>
                     <div id="mobile-operator-filters" class="flex flex-col gap-sm">
