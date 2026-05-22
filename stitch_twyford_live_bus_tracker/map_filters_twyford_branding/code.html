@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Route &amp; Filter Manager | Buses through Twyford</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=Sora:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#c3c6d7",
+                    "error": "#ba1a1a",
+                    "primary": "#004ac6",
+                    "on-surface": "#191c1e",
+                    "surface-bright": "#f7f9fb",
+                    "outline": "#737686",
+                    "on-background": "#191c1e",
+                    "on-surface-variant": "#434655",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#0053db",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "tertiary-fixed": "#c9e6ff",
+                    "on-secondary-container": "#54647a",
+                    "surface-dim": "#d8dadc",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "on-tertiary-container": "#e4f2ff",
+                    "secondary": "#505f76",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary-fixed": "#001e2f",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "primary-container": "#2563eb",
+                    "primary-fixed": "#dbe1ff",
+                    "secondary-container": "#d0e1fb",
+                    "primary-fixed-dim": "#b4c5ff",
+                    "background": "#f7f9fb",
+                    "tertiary-container": "#0074a6",
+                    "on-primary-fixed": "#00174b",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#005a82",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#b4c5ff",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-container-low": "#f2f4f6",
+                    "on-secondary-fixed": "#0b1c30",
+                    "surface-container": "#eceef0",
+                    "surface": "#f7f9fb",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-primary-container": "#eeefff",
+                    "secondary-fixed": "#d3e4fe",
+                    "inverse-surface": "#2d3133",
+                    "on-tertiary-fixed-variant": "#004c6e",
+                    "tertiary-fixed-dim": "#89ceff",
+                    "surface-variant": "#e0e3e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.5rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "lg": "48px",
+                    "xs": "4px",
+                    "margin-desktop": "40px",
+                    "margin-mobile": "16px",
+                    "base": "8px",
+                    "md": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "headline-lg": ["Sora"],
+                    "headline-xl": ["Sora"],
+                    "label-md": ["JetBrains Mono"],
+                    "headline-lg-mobile": ["Sora"],
+                    "headline-md": ["Sora"],
+                    "label-sm": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "1.4", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .transit-marker-pulse {
+            position: relative;
+        }
+        .transit-marker-pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #004ac6;
+            opacity: 0.3;
+            animation: pulse 2s infinite;
+            z-index: -1;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d8dadc;
+            border-radius: 10px;
+        }
+        .light-map-filter {
+            filter: grayscale(0.2) contrast(1.1) brightness(1.05) saturate(0.8);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-sm flex justify-between items-center px-container-margin py-sm">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-primary">Buses through Twyford</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined p-sm rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined p-sm rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors active:scale-95 duration-200" data-icon="person">person</button>
+</div>
+</header>
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 z-40 hidden md:flex flex-col gap-md p-md bg-surface-container-low/95 backdrop-blur-2xl border-r border-outline-variant pt-24">
+<div class="mb-md">
+<h1 class="font-headline-md text-on-surface">Buses through Twyford Hub</h1>
+<p class="text-on-surface-variant text-body-md opacity-80">Twyford Live Tracking</p>
+</div>
+<nav class="flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-semibold transition-all active:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-body-md">Map</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all active:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="directions_bus">directions_bus</span>
+<span class="font-body-md">Routes</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all active:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+<span class="font-body-md">Saved</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container transition-all active:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+<span class="font-body-md">Alerts</span>
+</a>
+</nav>
+</aside>
+<!-- Main Map Canvas -->
+<main class="fixed inset-0 z-0">
+<div class="w-full h-full" data-location="Twyford, United Kingdom">
+<!-- Light Mode Map Layer -->
+<img class="w-full h-full object-cover light-map-filter" data-alt="A clean, minimalist light mode cartographic map of Twyford, UK, featuring soft pastel colors, clear road networks in white and light gray, and subtle green areas. The aesthetic is modern, professional, and high-visibility, emphasizing route clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2rzBMUkoDnWWRo1bTUcQ-039-JkI6Sot_LX4zlRsdym88j6t2t9O0AGXuHtt6K45cfeuHmQzWScQv12ouZqpfIlmCB6bQlv0xUlnOdleddsgDiNKo_qfAZflZbhTLxkUqSlIw6YPHvVByjm3Y9TpnOQbd776C-hWP-rf0owJca-3v7ay9suGtTzwVDEfOL5L1T8O_LlrTRVdRe2zbGRl8IghKP71ASqQDSPbD2Vgp9tx1FyeIjTNbkNpcODQJzbrlKcueqxyDJUM"/>
+<!-- Floating Markers -->
+<div class="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2 transit-marker-pulse">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center border-2 border-white shadow-lg">
+<span class="material-symbols-outlined text-on-primary" data-icon="directions_bus" style="font-variation-settings: 'FILL' 1;">directions_bus</span>
+</div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-lowest px-2 py-1 rounded shadow-sm text-[10px] font-label-md text-on-surface border border-outline-variant">128</div>
+</div>
+<div class="absolute top-[45%] left-[55%] transform -translate-x-1/2 -translate-y-1/2">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center border-2 border-white shadow-lg">
+<span class="material-symbols-outlined text-on-tertiary" data-icon="train">train</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Map Layers Manager Sidebar -->
+<section class="fixed right-0 top-0 h-full w-full md:w-96 z-40 glass-panel md:mr-10 md:my-20 md:h-[calc(100vh-160px)] md:rounded-xl overflow-hidden flex flex-col shadow-xl border border-outline-variant transition-transform duration-500 translate-y-[100%] md:translate-y-0" id="filter-drawer">
+<!-- Drawer Handle (Mobile) -->
+<div class="w-full h-10 flex justify-center items-center md:hidden border-b border-outline-variant">
+<div class="w-12 h-1 bg-surface-dim rounded-full"></div>
+</div>
+<div class="p-md flex-1 overflow-y-auto space-y-md">
+<!-- Header -->
+<header class="flex justify-between items-center border-b border-outline-variant pb-md">
+<h2 class="font-headline-md text-on-surface">Map Layers</h2>
+<button class="md:hidden material-symbols-outlined text-on-surface-variant" onclick="toggleDrawer()">expand_more</button>
+</header>
+<!-- Toggles Section -->
+<div class="space-y-sm">
+<h3 class="font-label-md text-outline uppercase tracking-wider text-[11px]">Visibility</h3>
+<div class="flex flex-col gap-xs">
+<label class="flex items-center justify-between group cursor-pointer p-sm rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="text-body-md font-medium text-on-surface">Show All Stops</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+<label class="flex items-center justify-between group cursor-pointer p-sm rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="text-body-md font-medium text-on-surface">Show Bus Labels</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+</div>
+</div>
+<!-- Company Filter -->
+<div class="space-y-sm">
+<h3 class="font-label-md text-outline uppercase tracking-wider text-[11px]">Company</h3>
+<div class="grid grid-cols-2 gap-sm">
+<button class="flex items-center gap-sm px-sm py-2 bg-primary-container text-on-primary-container rounded-lg border border-primary/10 shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-md font-semibold">Arriva</span>
+</button>
+<button class="flex items-center gap-sm px-sm py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg border border-outline-variant hover:border-primary/40 transition-all active:scale-95 shadow-sm">
+<div class="w-[18px] h-[18px] rounded-full border-2 border-outline-variant"></div>
+<span class="font-body-md">Reading</span>
+</button>
+<button class="flex items-center gap-sm px-sm py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg border border-outline-variant hover:border-primary/40 transition-all active:scale-95 shadow-sm">
+<div class="w-[18px] h-[18px] rounded-full border-2 border-outline-variant"></div>
+<span class="font-body-md">Courtney</span>
+</button>
+<button class="flex items-center gap-sm px-sm py-2 bg-surface-container-lowest text-on-surface-variant rounded-lg border border-outline-variant hover:border-primary/40 transition-all active:scale-95 shadow-sm">
+<div class="w-[18px] h-[18px] rounded-full border-2 border-outline-variant"></div>
+<span class="font-body-md">GWR Rail</span>
+</button>
+</div>
+</div>
+<!-- Active Routes Checklist -->
+<div class="space-y-sm">
+<h3 class="font-label-md text-outline uppercase tracking-wider text-[11px]">Active Routes</h3>
+<div class="flex flex-col gap-sm">
+<!-- Route 128 -->
+<div class="flex items-center gap-md p-md bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary/30 transition-all group cursor-pointer shadow-sm">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/50" type="checkbox"/>
+<div class="flex items-center gap-md flex-1">
+<span class="font-label-md bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded">128</span>
+<div class="flex flex-col">
+<span class="font-body-md font-bold text-on-surface">Wokingham Station</span>
+<span class="text-xs text-on-surface-variant">Live: 4 vehicles</span>
+</div>
+</div>
+</div>
+<!-- Route 850 -->
+<div class="flex items-center gap-md p-md bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary/30 transition-all group cursor-pointer shadow-sm">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/50" type="checkbox"/>
+<div class="flex items-center gap-md flex-1">
+<span class="font-label-md bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded">850</span>
+<div class="flex flex-col">
+<span class="font-body-md font-bold text-on-surface">High Wycombe</span>
+<span class="text-xs text-on-surface-variant">Live: 6 vehicles</span>
+</div>
+</div>
+</div>
+<!-- Route 4 -->
+<div class="flex items-center gap-md p-md bg-surface-container-lowest/50 rounded-xl border border-outline-variant hover:border-primary/30 transition-all group cursor-pointer opacity-70">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/50" type="checkbox"/>
+<div class="flex items-center gap-md flex-1">
+<span class="font-label-md bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded">4</span>
+<div class="flex flex-col">
+<span class="font-body-md font-bold text-on-surface">Reading Central</span>
+<span class="text-xs text-on-surface-variant">Inactive</span>
+</div>
+</div>
+</div>
+<!-- Route 121 -->
+<div class="flex items-center gap-md p-md bg-surface-container-lowest rounded-xl border border-outline-variant hover:border-primary/30 transition-all group cursor-pointer shadow-sm">
+<input checked="" class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/50" type="checkbox"/>
+<div class="flex items-center gap-md flex-1">
+<span class="font-label-md bg-secondary-fixed text-on-secondary-fixed-variant px-3 py-1 rounded">121</span>
+<div class="flex flex-col">
+<span class="font-body-md font-bold text-on-surface">Twyford Circular</span>
+<span class="text-xs text-on-surface-variant">Live: 2 vehicles</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-md bg-surface-container-low border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg shadow-md active:scale-[0.98] transition-transform">
+            Apply 3 Filters
+        </button>
+</div>
+</section>
+<!-- Floating Action Button (Mobile) -->
+<button class="fixed bottom-24 right-container-margin z-50 md:hidden w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center active:scale-90 transition-all" onclick="toggleDrawer()">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+<!-- Bottom Navigation (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl border-t border-outline-variant shadow-lg md:hidden">
+<div class="flex flex-col items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-sm">Live Map</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+<span class="font-label-sm">Routes</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+<span class="font-label-sm">Stops</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-sm">Profile</span>
+</div>
+</nav>
+<script>
+    function toggleDrawer() {
+        const drawer = document.getElementById('filter-drawer');
+        if (drawer.classList.contains('translate-y-[100%]')) {
+            drawer.classList.remove('translate-y-[100%]');
+            drawer.classList.add('translate-y-0');
+        } else {
+            drawer.classList.add('translate-y-[100%]');
+            drawer.classList.remove('translate-y-0');
+        }
+    }
+
+    // Handle desktop resize visibility
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+            document.getElementById('filter-drawer').classList.remove('translate-y-[100%]');
+            document.getElementById('filter-drawer').classList.add('translate-y-0');
+        }
+    });
+</script>
+</body></html>
