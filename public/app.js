@@ -21,10 +21,9 @@ const state = {
   activeJourneyBusId: null,
   refreshTimer: null,
   currentView: 'map',      // 'map' | 'routes'
-  operatorFilters: new Set(),  // operators currently enabled (all by default)
-  allOperators: new Set(),
+  routeFilters: new Set(),     // bus routes currently visible (all by default)
+  routeStopFilters: new Set(), // routes whose stops are shown (all by default)
   mobileFiltersOpen: false,
-  stopsVisible: true,
   lastFetchSource: null,
 };
 
@@ -47,9 +46,8 @@ const $timelineStops = document.getElementById('timeline-stops-container');
 const $timelineLine  = document.getElementById('timeline-progress-line');
 const $routesView    = document.getElementById('routes-view');
 const $routesList    = document.getElementById('routes-list');
-const $operatorFilters      = document.getElementById('operator-filters');
-const $mobileOperatorFilters = document.getElementById('mobile-operator-filters');
-const $mobileRouteFilters    = document.getElementById('mobile-route-filters');
+const $routeFilters       = document.getElementById('route-filters');
+const $mobileRouteFilters = document.getElementById('mobile-route-filters');
 const $mobileFilterDrawer    = document.getElementById('mobile-filter-drawer');
 const $panelBackdrop  = document.getElementById('panel-backdrop');
 const $searchInput    = document.getElementById('route-search');
@@ -161,7 +159,7 @@ async function fetchRoutes() {
 //  MAP UPDATES
 // =============================================
 function updateBusMarkers() {
-  const visibleBuses = state.buses.filter(bus => state.operatorFilters.has(bus.operator));
+  const visibleBuses = state.buses.filter(bus => state.routeFilters.has(bus.lineRef));
   const visibleIds = new Set(visibleBuses.map(b => b.id));
 
   // Remove markers that are no longer present
@@ -207,9 +205,8 @@ function updateStopMarkers() {
   Object.values(state.stopMarkers).forEach(m => state.map.removeLayer(m));
   state.stopMarkers = {};
 
-  if (!state.stopsVisible) return;
-
   state.stops.forEach(stop => {
+    if (!stop.routes.some(r => state.routeStopFilters.has(r))) return;
     const isActive = stop.id === state.activeStopId;
     const marker = L.marker([stop.lat, stop.lon], {
       icon: createStopIcon(stop, isActive),
@@ -495,90 +492,118 @@ function hideBackdrop() {
 }
 
 // =============================================
-//  OPERATOR & ROUTE FILTERS
+//  ROUTE & STOP FILTERS (combined)
 // =============================================
-function discoverOperators() {
-  state.allOperators.clear();
-  state.buses.forEach(bus => state.allOperators.add(bus.operator));
+function renderCombinedFilters() {
+  const byOperator = {};
+  Object.entries(state.routes).forEach(([routeNum, info]) => {
+    if (!byOperator[info.operator]) byOperator[info.operator] = [];
+    byOperator[info.operator].push([routeNum, info]);
+  });
 
-  // Also include known operators
-  Object.values(state.routes).forEach(r => state.allOperators.add(r.operator));
+  const html = Object.entries(byOperator).sort((a, b) => a[0].localeCompare(b[0])).map(([operator, routes]) => `
+    <div class="flex flex-col gap-xs">
+      <span class="text-xs text-outline font-semibold">${operator}</span>
+      ${routes.sort((a, b) => a[0].localeCompare(b[0])).map(([routeNum, info]) => `
+        <div class="rounded-xl bg-surface-container/40 px-sm py-xs">
+          <div class="flex items-center gap-sm">
+            <span class="inline-block w-8 text-center text-xs font-bold text-white rounded-md py-0.5 shrink-0" style="background:${info.color}">${routeNum}</span>
+            <span class="text-sm font-medium text-on-surface leading-tight">${info.destination}</span>
+          </div>
+          <div class="flex gap-md mt-xs pl-10">
+            <label class="flex items-center gap-xs cursor-pointer select-none">
+              <input type="checkbox" ${state.routeFilters.has(routeNum) ? 'checked' : ''} data-route="${routeNum}"
+                     class="route-filter-checkbox w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer"/>
+              <span class="text-xs text-on-surface-variant">Buses</span>
+            </label>
+            <label class="flex items-center gap-xs cursor-pointer select-none">
+              <input type="checkbox" ${state.routeStopFilters.has(routeNum) ? 'checked' : ''} data-route="${routeNum}"
+                     class="route-stop-checkbox w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer"/>
+              <span class="text-xs text-on-surface-variant">Stops</span>
+            </label>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
 
-  // If first time, enable all
-  if (state.operatorFilters.size === 0) {
-    state.allOperators.forEach(op => state.operatorFilters.add(op));
-  }
-  // Ensure any new operators are added
-  state.allOperators.forEach(op => {
-    if (!state.operatorFilters.has(op)) {
-      state.operatorFilters.add(op);
-    }
+  [$routeFilters, $mobileRouteFilters].forEach(el => {
+    if (!el) return;
+    el.innerHTML = html;
+    el.querySelectorAll('.route-filter-checkbox').forEach(cb => {
+      cb.addEventListener('change', handleRouteFilterChange);
+    });
+    el.querySelectorAll('.route-stop-checkbox').forEach(cb => {
+      cb.addEventListener('change', handleRouteStopFilterChange);
+    });
   });
 }
 
-function renderOperatorFilters() {
-  const operators = [...state.allOperators].sort();
-
-  const renderCheckbox = (op, containerId) => {
-    const checked = state.operatorFilters.has(op) ? 'checked' : '';
-    return `
-      <label class="flex items-center gap-md cursor-pointer">
-        <input type="checkbox" ${checked} data-operator="${op}"
-               class="operator-checkbox rounded border-outline-variant text-primary focus:ring-primary/50 w-5 h-5"/>
-        <span class="text-body-md font-medium text-on-surface">${op}</span>
-      </label>`;
-  };
-
-  if ($operatorFilters) {
-    $operatorFilters.innerHTML = operators.map(op => renderCheckbox(op)).join('');
-    $operatorFilters.querySelectorAll('.operator-checkbox').forEach(cb => {
-      cb.addEventListener('change', handleOperatorFilterChange);
-    });
-  }
-
-  if ($mobileOperatorFilters) {
-    $mobileOperatorFilters.innerHTML = operators.map(op => renderCheckbox(op)).join('');
-    $mobileOperatorFilters.querySelectorAll('.operator-checkbox').forEach(cb => {
-      cb.addEventListener('change', handleOperatorFilterChange);
-    });
-  }
-}
-
-function renderMobileRouteFilters() {
-  if (!$mobileRouteFilters) return;
-  const routes = Object.entries(state.routes);
-  if (routes.length === 0) return;
-
-  $mobileRouteFilters.innerHTML = routes.map(([key, route]) => `
-    <div class="flex items-center gap-md p-sm bg-white/60 rounded-xl border border-outline-variant/20">
-      <span class="inline-block w-10 text-center font-label-md font-bold text-white rounded-lg py-1" style="background: ${route.color}">${key}</span>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-on-surface truncate">${route.destination}</p>
-        <p class="text-xs text-on-surface-variant">${route.operator}</p>
-      </div>
-    </div>`).join('');
-}
-
-function handleOperatorFilterChange(e) {
-  const op = e.target.dataset.operator;
+function handleRouteFilterChange(e) {
+  const route = e.target.dataset.route;
   if (e.target.checked) {
-    state.operatorFilters.add(op);
+    state.routeFilters.add(route);
   } else {
-    state.operatorFilters.delete(op);
+    state.routeFilters.delete(route);
   }
-  // Sync checkboxes across desktop/mobile
-  document.querySelectorAll(`.operator-checkbox[data-operator="${op}"]`).forEach(cb => {
+  document.querySelectorAll(`.route-filter-checkbox[data-route="${route}"]`).forEach(cb => {
     cb.checked = e.target.checked;
   });
+  syncMasterBusCheckbox();
   updateBusMarkers();
 }
 
-function handleStopToggleChange(e) {
-  state.stopsVisible = e.target.checked;
-  // Sync toggles across desktop/mobile
-  document.querySelectorAll('.stop-toggle-checkbox').forEach(cb => {
-    cb.checked = state.stopsVisible;
+function handleRouteStopFilterChange(e) {
+  const route = e.target.dataset.route;
+  if (e.target.checked) {
+    state.routeStopFilters.add(route);
+  } else {
+    state.routeStopFilters.delete(route);
+  }
+  document.querySelectorAll(`.route-stop-checkbox[data-route="${route}"]`).forEach(cb => {
+    cb.checked = e.target.checked;
   });
+  syncMasterStopCheckbox();
+  updateStopMarkers();
+}
+
+function syncMasterBusCheckbox() {
+  const routeKeys = Object.keys(state.routes);
+  const all = routeKeys.every(r => state.routeFilters.has(r));
+  const any = routeKeys.some(r => state.routeFilters.has(r));
+  document.querySelectorAll('.all-buses-checkbox').forEach(cb => {
+    cb.checked = all;
+    cb.indeterminate = !all && any;
+  });
+}
+
+function syncMasterStopCheckbox() {
+  const routeKeys = Object.keys(state.routes);
+  const all = routeKeys.every(r => state.routeStopFilters.has(r));
+  const any = routeKeys.some(r => state.routeStopFilters.has(r));
+  document.querySelectorAll('.all-stops-checkbox').forEach(cb => {
+    cb.checked = all;
+    cb.indeterminate = !all && any;
+  });
+}
+
+function handleAllBusesToggle(e) {
+  const checked = e.target.checked;
+  Object.keys(state.routes).forEach(r => {
+    if (checked) state.routeFilters.add(r);
+    else state.routeFilters.delete(r);
+  });
+  document.querySelectorAll('.route-filter-checkbox').forEach(cb => { cb.checked = checked; });
+  document.querySelectorAll('.all-buses-checkbox').forEach(cb => { cb.checked = checked; cb.indeterminate = false; });
+  updateBusMarkers();
+}
+
+function handleAllStopsToggle(e) {
+  const checked = e.target.checked;
+  Object.keys(state.routes).forEach(r => {
+    if (checked) state.routeStopFilters.add(r);
+    else state.routeStopFilters.delete(r);
+  });
+  document.querySelectorAll('.route-stop-checkbox').forEach(cb => { cb.checked = checked; });
+  document.querySelectorAll('.all-stops-checkbox').forEach(cb => { cb.checked = checked; cb.indeterminate = false; });
   updateStopMarkers();
 }
 
@@ -752,9 +777,7 @@ function switchView(view) {
 //  AUTO-REFRESH
 // =============================================
 async function refreshData() {
-  const result = await fetchBuses();
-  discoverOperators();
-  renderOperatorFilters();
+  await fetchBuses();
   updateBusMarkers();
   updateStatusBadge();
 
@@ -814,10 +837,9 @@ function bindEvents() {
     closeMobileFilters();
   });
 
-  // Stop visibility toggles
-  document.querySelectorAll('.stop-toggle-checkbox').forEach(cb => {
-    cb.addEventListener('change', handleStopToggleChange);
-  });
+  // Master bus/stop toggles
+  document.querySelectorAll('.all-buses-checkbox').forEach(cb => cb.addEventListener('change', handleAllBusesToggle));
+  document.querySelectorAll('.all-stops-checkbox').forEach(cb => cb.addEventListener('change', handleAllStopsToggle));
 
   // Search
   $searchInput?.addEventListener('input', (e) => handleSearch(e.target.value));
@@ -847,10 +869,14 @@ async function init() {
   // Fetch initial data in parallel
   await Promise.all([fetchStops(), fetchRoutes(), fetchBuses()]);
 
-  // Set up operators and render
-  discoverOperators();
-  renderOperatorFilters();
-  renderMobileRouteFilters();
+  // Initialise all route filters (show all by default)
+  Object.keys(state.routes).forEach(r => {
+    state.routeFilters.add(r);
+    state.routeStopFilters.add(r);
+  });
+
+  // Render sidebar filters (done once — not re-rendered on refresh)
+  renderCombinedFilters();
 
   // Render markers
   updateStopMarkers();
