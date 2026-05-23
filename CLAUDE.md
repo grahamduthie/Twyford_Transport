@@ -85,7 +85,7 @@ The server queries three operators in parallel (`BODS_OPERATORS`, line 266):
 |------|----------|--------|
 | `RBUS` | Reading Buses | 12 |
 | `CSLB` | Carousel Buses | 127, 850 |
-| `CTNY` | Courtney Buses | 128, 129 |
+| `CTNY` | Thames Valley Buses | 128, 129 |
 
 If a new operator starts serving the area, add their BODS code to `BODS_OPERATORS` and add a display name mapping to `OPERATOR_NAMES` (line 212).
 
@@ -95,8 +95,8 @@ Defined in `ROUTES_INFO` (line 197). Maps route number to operator, origin, dest
 
 | Route | Operator | Origin | Destination | Colour |
 |-------|----------|--------|-------------|--------|
-| 128 | Courtney Buses | Reading Station | Wokingham Station | `#2563eb` |
-| 129 | Courtney Buses | Reading Station | Wokingham Station | `#3b82f6` |
+| 128 | Thames Valley Buses | Reading Station | Wokingham Station | `#2563eb` |
+| 129 | Thames Valley Buses | Reading Station | Wokingham Station | `#3b82f6` |
 | 127 | Carousel Buses | Reading Station | Maidenhead | `#10b981` |
 | 850 | Carousel Buses | Reading Station | High Wycombe | `#d97706` |
 | 12 | Reading Buses | Reading Station | Twyford Hub | `#8b5cf6` |
@@ -105,7 +105,7 @@ Defined in `ROUTES_INFO` (line 197). Maps route number to operator, origin, dest
 
 Bus bearing (compass direction of travel) is used to show directional arrows on the map. Different operators provide this data differently:
 
-- **Reading Buses / Courtney Buses:** Provide `Bearing` directly in degrees from north.
+- **Reading Buses / Thames Valley Buses:** Provide `Bearing` directly in degrees from north.
 - **Carousel Buses:** Provide `DirectionRef` (inbound/outbound) but not `Bearing`. The server derives approximate bearings from `ROUTE_DIRECTION_BEARINGS` (line 206):
 
 ```js
@@ -170,7 +170,7 @@ Returns all live buses on the 5 target routes.
   "data": [{
     "id": "BU52GAS",           // VehicleRef from BODS
     "lineRef": "128",
-    "operator": "Courtney Buses",
+    "operator": "Thames Valley Buses",
     "operatorRef": "CTNY",
     "destinationName": "Wokingham Station",
     "originName": "Friar Street",
@@ -328,7 +328,7 @@ Panels use CSS transform/opacity transitions (`.panel-transition` class, 0.4s cu
 
 - **Reading Buses (RBUS):** Does not provide `DestinationName` in their BODS feed — always "Unknown Destination". The server falls back to `ROUTES_INFO` for known routes. They do provide `OriginName` and `Bearing`.
 - **Carousel Buses (CSLB):** Provides destination names but they need cleanup (underscores, duplicated city prefixes). Does not provide `Bearing` — the server derives approximate bearings from `DirectionRef` (inbound/outbound) using `ROUTE_DIRECTION_BEARINGS`.
-- **Courtney Buses (CTNY):** Provides `Bearing` but not `DestinationName`. Falls back to `ROUTES_INFO`.
+- **Thames Valley Buses (CTNY):** Provides `Bearing` but not `DestinationName`. Falls back to `ROUTES_INFO`.
 - **MonitoredCall / OnwardCalls:** None of the three operators currently provide these SIRI-VM fields. The journey timeline therefore always uses the route stops fallback with distance-based estimates. If operators start publishing this data, the code is ready to use it.
 - **Arrival ETAs:** Calculated from straight-line distance at an assumed speed. These are rough estimates, not real timetable data. A bus heading away from a stop will still show an ETA.
 - **Stop coordinates:** Sourced from OpenStreetMap Overpass API and NaPTAN data via geopunk.co.uk. One stop (Icehouse Lane, Henley, `340024004NOR`) uses approximate coordinates as no exact data was available.

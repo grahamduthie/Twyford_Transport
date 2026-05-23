@@ -195,8 +195,8 @@ const TARGET_ROUTES = new Set(["850", "12", "127", "128", "129"]);
 
 // Known route metadata (operators verified against BODS data)
 const ROUTES_INFO = {
-  "128": { lineName: "128", operator: "Courtney Buses", origin: "Reading Station", destination: "Wokingham Station", color: "#2563eb" },
-  "129": { lineName: "129", operator: "Courtney Buses", origin: "Reading Station", destination: "Wokingham Station", color: "#3b82f6" },
+  "128": { lineName: "128", operator: "Thames Valley Buses", origin: "Reading Station", destination: "Wokingham Station", color: "#2563eb" },
+  "129": { lineName: "129", operator: "Thames Valley Buses", origin: "Reading Station", destination: "Wokingham Station", color: "#3b82f6" },
   "127": { lineName: "127", operator: "Carousel Buses", origin: "Reading Station", destination: "Maidenhead", color: "#10b981" },
   "850": { lineName: "850", operator: "Carousel Buses", origin: "Reading Station", destination: "High Wycombe", color: "#d97706" },
   "12":  { lineName: "12",  operator: "Reading Buses", origin: "Reading Station", destination: "Twyford Hub", color: "#8b5cf6" }
@@ -220,8 +220,8 @@ const OPERATOR_NAMES = {
   "ARBB": "Arriva",
   "FECS": "First",
   "GWR":  "GWR Rail",
-  "CTNY": "Courtney Buses",
-  "CORT": "Courtney Buses"
+  "CTNY": "Thames Valley Buses",
+  "CORT": "Thames Valley Buses"
 };
 
 // Clean up messy BODS destination names
